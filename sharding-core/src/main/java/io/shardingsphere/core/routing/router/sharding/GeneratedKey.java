@@ -20,6 +20,7 @@ package io.shardingsphere.core.routing.router.sharding;
 import io.shardingsphere.core.parsing.parser.context.condition.Column;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.List;
  */
 @RequiredArgsConstructor
 @Getter
+@ToString
 public final class GeneratedKey {
     
     private final Column column;

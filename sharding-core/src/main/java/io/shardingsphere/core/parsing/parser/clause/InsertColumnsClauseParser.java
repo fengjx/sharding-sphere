@@ -56,6 +56,12 @@ public final class InsertColumnsClauseParser implements SQLClauseParser {
         Collection<Column> result = new LinkedList<>();
         String tableName = insertStatement.getTables().getSingleTableName();
         Optional<Column> generateKeyColumn = shardingRule.getGenerateKeyColumn(tableName);
+
+        // 判断不需要分库分表的情况是否配置了自动生成id
+        if (!generateKeyColumn.isPresent()) {
+            generateKeyColumn = shardingRule.getNoShardingGenerateKeyColumn(tableName);
+        }
+        
         int count = 0;
         if (lexerEngine.equalAny(Symbol.LEFT_PAREN)) {
             do {

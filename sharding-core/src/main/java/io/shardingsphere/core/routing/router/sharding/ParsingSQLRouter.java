@@ -50,6 +50,7 @@ import io.shardingsphere.core.rule.ShardingRule;
 import io.shardingsphere.core.rule.TableRule;
 import io.shardingsphere.core.util.SQLLogger;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -62,6 +63,7 @@ import java.util.List;
  * @author maxiaoguang
  * @author panjuan
  */
+@Slf4j
 @RequiredArgsConstructor
 public final class ParsingSQLRouter implements ShardingRouter {
     
@@ -151,13 +153,20 @@ public final class ParsingSQLRouter implements ShardingRouter {
         String logicTableName = insertStatement.getTables().getSingleTableName();
         Optional<TableRule> tableRule = shardingRule.tryFindTableRuleByLogicTable(logicTableName);
         if (!tableRule.isPresent()) {
-            return null;
-        }
-        Optional<Column> generateKeyColumn = shardingRule.getGenerateKeyColumn(logicTableName);
-        if (generateKeyColumn.isPresent()) {
-            result = new GeneratedKey(generateKeyColumn.get());
-            for (int i = 0; i < insertStatement.getInsertValues().getInsertValues().size(); i++) {
-                result.getGeneratedKeys().add(shardingRule.generateKey(logicTableName));
+            Optional<Column> generateKeyColumn = shardingRule.getNoShardingGenerateKeyColumn(logicTableName);
+            if (generateKeyColumn.isPresent()) {
+                result = new GeneratedKey(generateKeyColumn.get());
+                result.getGeneratedKeys().add(shardingRule.getDefaultKeyGenerator().generateKey());
+            }
+            log.info("build no sharding table generateKey: {}", result);
+            return result;
+        } else {
+            Optional<Column> generateKeyColumn = shardingRule.getGenerateKeyColumn(logicTableName);
+            if (generateKeyColumn.isPresent()) {
+                result = new GeneratedKey(generateKeyColumn.get());
+                for (int i = 0; i < insertStatement.getInsertValues().getInsertValues().size(); i++) {
+                    result.getGeneratedKeys().add(shardingRule.generateKey(logicTableName));
+                }
             }
         }
         return result;

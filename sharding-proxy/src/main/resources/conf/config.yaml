@@ -67,3 +67,53 @@
 #  masterDataSourceName: ds_0
 #  slaveDataSourceNames:
 #    - ds_1
+
+
+dataSources:
+  ds_0:
+    url: jdbc:mysql://10.255.212.11:3306/db_3
+    username: root
+    password: 1234
+  ds_1:
+    url: jdbc:mysql://10.255.212.11:3306/db_4
+    username: root
+    password: 1234
+
+shardingRule:
+  tables:
+    user:
+      actualDataNodes: ds_${0..1}.user
+      keyGeneratorColumnName: id
+
+    post:
+      actualDataNodes: ds_${0..1}.post
+      databaseStrategy:
+          inline:
+            shardingColumn: pid
+            algorithmExpression: ds_${pid % 2}
+      keyGeneratorColumnName: pid
+
+  bindingTables:
+    - user
+
+  defaultDatabaseStrategy:
+    inline:
+      shardingColumn: id
+      algorithmExpression: ds_${id % 2}
+
+  defaultTableStrategy:
+    none:
+
+  noSharding:
+    defaultKeyGeneratorColumnName: id
+    keyGeneratorColumnNames:
+      msg: msgid
+      category: id
+    excludeTables:
+      - topic
+
+  defaultKeyGeneratorClassName: io.shardingsphere.core.keygen.DefaultKeyGenerator
+  defaultDataSourceName: ds_0
+  props:
+    sql.show: true
+

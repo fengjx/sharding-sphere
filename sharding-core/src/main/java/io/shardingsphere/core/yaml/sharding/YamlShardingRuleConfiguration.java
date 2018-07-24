@@ -59,7 +59,10 @@ public class YamlShardingRuleConfiguration {
     private Map<String, Object> configMap = new LinkedHashMap<>();
     
     private Properties props = new Properties();
-    
+
+    private YamlNoShardingConfiguration noSharding;
+
+
     /**
      * Get sharding rule configuration.
      *
@@ -82,6 +85,9 @@ public class YamlShardingRuleConfiguration {
         }
         if (null != defaultKeyGeneratorClassName) {
             result.setDefaultKeyGenerator(KeyGeneratorFactory.newInstance(defaultKeyGeneratorClassName));
+        }
+        if (null != noSharding) {
+            result.setNoShardingConfiguration(noSharding.build());
         }
         Collection<MasterSlaveRuleConfiguration> masterSlaveRuleConfigs = new LinkedList<>();
         for (Entry<String, YamlMasterSlaveRuleConfiguration> entry : masterSlaveRules.entrySet()) {

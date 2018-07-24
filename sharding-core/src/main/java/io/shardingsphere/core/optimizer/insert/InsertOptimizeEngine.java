@@ -31,12 +31,9 @@ import io.shardingsphere.core.parsing.parser.sql.dml.insert.InsertStatement;
 import io.shardingsphere.core.routing.router.sharding.GeneratedKey;
 import io.shardingsphere.core.rule.ShardingRule;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Insert optimize engine.
@@ -68,8 +65,17 @@ public final class InsertOptimizeEngine implements OptimizeEngine {
             currentParameters.addAll(parameters.subList(count * insertValue.getParametersCount(), (count + 1) * insertValue.getParametersCount()));
             
             String logicTableName = insertStatement.getTables().getSingleTableName();
-            Optional<Column> generateKeyColumn = shardingRule.getGenerateKeyColumn(logicTableName);
             InsertShardingCondition insertShardingCondition;
+            // 分库分表的表
+            Optional<Column> generateKeyColumn = shardingRule.getGenerateKeyColumn(logicTableName);
+            // 不分库分表但是需要生成id的表
+            Optional<Column> noShardingGenerateKeyColumn = shardingRule.getNoShardingGenerateKeyColumn(logicTableName);
+
+            // 非分库分表且需要自动生成id的表
+            if (noShardingGenerateKeyColumn.isPresent() && !generateKeyColumn.isPresent()) {
+                generateKeyColumn = noShardingGenerateKeyColumn;
+            }
+            
             if (-1 != insertStatement.getGenerateKeyColumnIndex() || !generateKeyColumn.isPresent()) {
                 insertShardingCondition = new InsertShardingCondition(insertValue.getExpression(), currentParameters);
             } else {
@@ -79,9 +85,9 @@ public final class InsertOptimizeEngine implements OptimizeEngine {
                 String expression;
                 Number currentGeneratedKey = generatedKeys.next();
                 if (0 == parameters.size()) {
-                    expression = insertValue.getExpression().substring(0, insertValue.getExpression().length() - 1) + ", " + currentGeneratedKey.toString() + ")";
+                    expression = StringUtils.substringBeforeLast(insertValue.getExpression(), ")") + ", " + currentGeneratedKey.toString() + ")";
                 } else {
-                    expression = insertValue.getExpression().substring(0, insertValue.getExpression().length() - 1) + ", ?)";
+                    expression = StringUtils.substringBeforeLast(insertValue.getExpression(), ")") + ", ?)";
                     currentParameters.add(currentGeneratedKey);
                 }
                 insertShardingCondition = new InsertShardingCondition(expression, currentParameters);

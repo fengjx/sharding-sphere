@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import io.shardingsphere.core.api.config.MasterSlaveRuleConfiguration;
+import io.shardingsphere.core.api.config.NoShardingConfiguration;
 import io.shardingsphere.core.api.config.ShardingRuleConfiguration;
 import io.shardingsphere.core.api.config.TableRuleConfiguration;
 import io.shardingsphere.core.exception.ShardingConfigurationException;
@@ -32,12 +33,9 @@ import io.shardingsphere.core.routing.strategy.ShardingStrategyFactory;
 import io.shardingsphere.core.routing.strategy.none.NoneShardingStrategy;
 import io.shardingsphere.core.util.StringUtil;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Databases and tables sharding rule configuration.
@@ -63,7 +61,7 @@ public final class ShardingRule {
     private final KeyGenerator defaultKeyGenerator;
     
     private final Collection<MasterSlaveRule> masterSlaveRules = new LinkedList<>();
-    
+
     public ShardingRule(final ShardingRuleConfiguration shardingRuleConfig, final Collection<String> dataSourceNames) {
         Preconditions.checkNotNull(dataSourceNames, "Data sources cannot be null.");
         Preconditions.checkArgument(!dataSourceNames.isEmpty(), "Data sources cannot be empty.");
@@ -268,7 +266,32 @@ public final class ShardingRule {
         }
         return Optional.absent();
     }
-    
+
+    /**
+     * generated no sharding table key
+     *
+     * @param logicTableName
+     * @return generated no sharding table key's column
+     */
+    public Optional<Column> getNoShardingGenerateKeyColumn(final String logicTableName) {
+        NoShardingConfiguration noShardingConfiguration = getShardingRuleConfig().getNoShardingConfiguration();
+        if (noShardingConfiguration == null) {
+            return Optional.absent();
+        }
+        // 需要排除的表（由数据库生成id）
+        if (noShardingConfiguration.getExcludeTables().contains(logicTableName)) {
+            return Optional.absent();
+        }
+
+        if (noShardingConfiguration.getKeyGeneratorColumnNames().containsKey(logicTableName)) {
+            return Optional.of(new Column(noShardingConfiguration.getKeyGeneratorColumnNames().get(logicTableName),
+                    logicTableName));
+        } else if (StringUtils.isNotBlank(noShardingConfiguration.getDefaultKeyGeneratorColumnName())) {
+            return Optional.of(new Column(noShardingConfiguration.getDefaultKeyGeneratorColumnName(), logicTableName));
+        }
+        return Optional.absent();
+    }
+
     /**
      * Generate key.
      *

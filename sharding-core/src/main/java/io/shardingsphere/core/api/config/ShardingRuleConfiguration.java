@@ -47,4 +47,7 @@ public final class ShardingRuleConfiguration {
     private KeyGenerator defaultKeyGenerator;
     
     private Collection<MasterSlaveRuleConfiguration> masterSlaveRuleConfigs = new LinkedList<>();
+
+    private NoShardingConfiguration noShardingConfiguration;
+
 }
