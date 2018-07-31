@@ -1,7 +1,7 @@
 fork from: https://github.com/sharding-sphere/sharding-sphere
 
 ### 项目背景
-近期需要对一个已有老系统进行数据库迁移，其中有几个大表（单表100多G），对性能有隐患，所以决定采用分库分表保存数据。为了满足自身业务需求，本项目扩展了sharding-sphere的功能。
+近期需要对一个已有老系统进行数据库迁移，其中有几个大表（单表100多G），对性能存在隐患，所以决定采用分库分表保存数据。为了满足自身业务需求，本项目扩展了sharding-sphere的功能。
 
 ### sharding-proxy调研
 * 优点：
